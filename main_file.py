@@ -1,7 +1,7 @@
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 import random
-from analysis import Analysis
+import analysis
 from my_token import TOKEN
 
 
@@ -14,13 +14,13 @@ def main():
     for event in longpoll.listen():
 
         if event.type == VkBotEventType.MESSAGE_NEW:
-            print(event)
+            #print(event)
             #print('Новое сообщение:')
             #print('Для меня от:', event.obj.message['from_id'])
             #print('Текст:', event.obj.message['text'])
             vk = vk_session.get_api()
             #print(event.obj.client_info)
-            message = Analysis(event.obj.message['text']).get_result()
+            message = analysis.Analysis(event.obj.message['text']).get_result()
             vk.messages.send(user_id=event.obj.message['from_id'],
                              message=message,
                              random_id=random.randint(0, 2 ** 64))

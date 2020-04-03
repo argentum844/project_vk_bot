@@ -48,8 +48,7 @@ class MapOfToponym:
         # все виды карт
         map_params = {
             "ll": ",".join([toponym_longitude, toponym_lattitude]),
-            #"spn": ",".join(spn),
-            "z": spn
+            "spn": ",".join(spn),
         }
         if self.type_marker:
             map_params["pt"] = ",".join([*self.coordinates, self.type_marker])
@@ -60,8 +59,10 @@ class MapOfToponym:
         else:
             map_params["l"] = "sat,skl"
         map_api_server = "http://static-maps.yandex.ru/1.x/"
-        response = requests.get(map_api_server, params=map_params)
-        return response.content # здесь хз как
+        result = map_api_server + '?'
+        for i in map_params:
+            result = result + '&' + i + '=' + map_params[i]
+        return result
 
     def get_result(self):
-        return BytesIO(self.map)
+        return self.map
