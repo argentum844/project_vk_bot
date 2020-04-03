@@ -4,12 +4,17 @@ import requests
 
 
 class MapOfToponym:
-    def __init__(self, toponym, type_marker="comma"):
+    def __init__(self, toponym, type_map="scheme", type_marker="comma"):
         self.type_marker = type_marker
-        self.toponym = self.get_toponym(toponym)
-        print(self.toponym)
-        self.coordinates = self.get_coordinates()
-        self.map = self.get_map(*self.get_coordinates(), self.get_spn(), "hybrid")
+        self.toponyms = self.get_toponym(toponym)
+        if not self.toponyms:
+            self.maps = ["Нет такого населенного пункта"]
+            return
+        self.maps = []
+        for i in self.toponyms:
+            self.toponym = i["GeoObject"]
+            self.coordinates = self.get_coordinates()
+            self.maps.append(self.get_map(*self.get_coordinates(), self.get_spn(), type_map))
 
     def change_type_marker(self, type_marker):
         self.type_marker = type_marker
@@ -25,19 +30,26 @@ class MapOfToponym:
         if not response:
             pass
         json_response = response.json()
-        toponym = json_response["response"]["GeoObjectCollection"][
-            "featureMember"][0]["GeoObject"]
+        if json_response["response"]["GeoObjectCollection"]["featureMember"] == []:
+            toponym = None
+        else:
+            toponym = json_response["response"]["GeoObjectCollection"][
+                "featureMember"]
         return toponym
 
     def get_coordinates(self):
         # возвращает координаты центра топонима
         toponym = self.toponym
+        if not toponym:
+            return (0, 0)
         toponym_coodrinates = toponym["Point"]["pos"]
         toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
         return toponym_longitude, toponym_lattitude
 
     def get_spn(self):
         # возвращает размер топонима
+        if not self.toponym:
+            return [0, 0]
         toponym = self.toponym["boundedBy"]
         spn1 = [float(x) for x in toponym["Envelope"]["lowerCorner"].split()]
         spn2 = [float(x) for x in toponym["Envelope"]["upperCorner"].split()]
@@ -46,6 +58,8 @@ class MapOfToponym:
     def get_map(self, toponym_longitude, toponym_lattitude, spn, type_map):
         # возвращает поток байт, который ты сам сможешб потом преобразовать в картинку
         # все виды карт
+        if not self.toponym:
+            return "Нет такого населенного пункта"
         map_params = {
             "ll": ",".join([toponym_longitude, toponym_lattitude]),
             "spn": ",".join(spn),
@@ -65,4 +79,5 @@ class MapOfToponym:
         return result
 
     def get_result(self):
-        return self.map
+        print('\n'.join(self.maps))
+        return '\n'.join(self.maps)
