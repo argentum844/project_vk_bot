@@ -1,20 +1,17 @@
 import sys
-from io import BytesIO
 import requests
+from io import BytesIO
 
 
 class MapOfToponym:
     def __init__(self, toponym, type_map="scheme", type_marker="comma"):
         self.type_marker = type_marker
-        self.toponyms = self.get_toponym(toponym)
-        if not self.toponyms:
-            self.maps = ["Нет такого населенного пункта"]
+        self.toponym = self.get_toponym(toponym)
+        if not self.toponym:
+            self.map = "Нет такого населенного пункта"
             return
-        self.maps = []
-        for i in self.toponyms:
-            self.toponym = i["GeoObject"]
-            self.coordinates = self.get_coordinates()
-            self.maps.append(self.get_map(*self.get_coordinates(), self.get_spn(), type_map))
+        self.coordinates = self.get_coordinates()
+        self.map = self.get_map(*self.get_coordinates(), self.get_spn(), type_map)
 
     def change_type_marker(self, type_marker):
         self.type_marker = type_marker
@@ -34,7 +31,7 @@ class MapOfToponym:
             toponym = None
         else:
             toponym = json_response["response"]["GeoObjectCollection"][
-                "featureMember"]
+                "featureMember"][0]["GeoObject"]
         return toponym
 
     def get_coordinates(self):
@@ -73,11 +70,12 @@ class MapOfToponym:
         else:
             map_params["l"] = "sat,skl"
         map_api_server = "http://static-maps.yandex.ru/1.x/"
-        result = map_api_server + '?'
-        for i in map_params:
-            result = result + '&' + i + '=' + map_params[i]
-        return result
+        #result = map_api_server + '?'
+        #for i in map_params:
+            #result = result + '&' + i + '=' + map_params[i]
+        #return result
+        response = requests.get(map_api_server, params=map_params)
+        return BytesIO(response.content)
 
     def get_result(self):
-        print('\n'.join(self.maps))
-        return '\n'.join(self.maps)
+        return self.map
