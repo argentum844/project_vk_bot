@@ -8,6 +8,7 @@ class DataBase:
         self.cursor = self.conn.cursor()
         self.user_id = user_id
         self.text = text
+        self.delete_time_out()
 
     def insert_request(self):
         date = str(datetime.datetime.now())
@@ -24,4 +25,19 @@ class DataBase:
             sql = "SELECT text FROM requests"
             self.cursor.execute(sql)
         return self.cursor.fetchall()
+
+    def delete_history(self):
+        try:
+            sql = "DELETE FROM requests WHERE user_id=?"
+            self.cursor.execute(sql, [self.user_id])
+            self.conn.commit()
+            return True
+        except:
+            return False
+
+    def delete_time_out(self):
+        date = str(datetime.datetime.now())
+        sql = "DELETE FROM requests WHERE date[5:6]!=?"
+        self.cursor.execute(sql, [date[5:6]])
+        self.conn.commit()
 
