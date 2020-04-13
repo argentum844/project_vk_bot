@@ -17,7 +17,8 @@ def main():
         if event.type == VkBotEventType.MESSAGE_NEW:
             vk = vk_session.get_api()
             upload = VkUpload(vk)
-            message = analysis.Analysis(event.obj.message['text']).get_result()
+            message = analysis.Analysis(event.obj.message['text'],
+                                        event.obj.message['from_id']).get_result()
             if type(message) != str:
                 response = upload.photo_messages(message)[0]
                 owner_id = response['owner_id']

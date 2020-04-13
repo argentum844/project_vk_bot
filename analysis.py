@@ -1,11 +1,15 @@
 import map_of_toponym
+from db_session import DataBase
 
 
 class Analysis:
-    def __init__(self, text):
+    def __init__(self, text, user_id):
+        self.db = DataBase(text, user_id)
+        self.db.insert_request()
         self.text = text.lower()
         self.greeting = 'привет здравствуй здорово прив hi hello хай'.split()
-        self.commands = ['Карта <название> <тип: гибрид, схема, спутник> \n(пример правильной команды: \"Карта Москва гибрид\")']
+        self.commands = ['Карта <название> <тип: гибрид, схема, спутник> \n(пример правильной команды: \"Карта Москва гибрид\")',
+                         'Мои запросы', 'Все запросы']
         self.result = self.analys()
 
     def get_result(self):
@@ -19,6 +23,8 @@ class Analysis:
             result = self.is_commands()
         elif self.is_first_command():
             result = self.is_first_command()
+        elif self.is_second_command():
+            result = self.is_second_command()
         if result == '':
             result = "чтобы посмотреть возможные команды, напиши слово \"Команды\""
         return result
@@ -32,7 +38,7 @@ class Analysis:
         if "команд" in self.text:
             res = ''
             for i in self.commands:
-                res += i + '\n'
+                res += i + '\n\n'
             return res
         return False
 
@@ -53,4 +59,12 @@ class Analysis:
             if toponym == '':
                 return 'Вы не ввели название населенного пункта'
             return map_of_toponym.MapOfToponym(toponym, type_map).get_result()
+        return False
+
+    def is_second_command(self):
+        if "мои запросы" in self.text:
+            res = '\n'.join([x[0] for x in self.db.get_requests(True)])
+            if res == '':
+                return 'что то пошло не так'
+            return res
         return False
