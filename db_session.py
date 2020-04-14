@@ -36,8 +36,8 @@ class DataBase:
             return False
 
     def delete_time_out(self):
-        date = str(datetime.datetime.now())
-        sql = "DELETE FROM requests WHERE date[5:6]!=?"
-        self.cursor.execute(sql, [date[5:6]])
+        date = str(datetime.datetime.now())[:7]
+        sql = f"DELETE FROM requests WHERE date  NOT like '{date}%'"
+        self.cursor.execute(sql)
         self.conn.commit()
 
