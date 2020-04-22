@@ -26,8 +26,8 @@ def main():
                 access_key = response['access_key']
                 attachment = f'photo{owner_id}_{photo_id}_{access_key}'
                 vk.messages.send(user_id=event.obj.message['from_id'],
-                                attachment=attachment,
-                                random_id=random.randint(0, 2 ** 64))
+                                 attachment=attachment,
+                                 random_id=random.randint(0, 2 ** 64))
             else:
                 vk.messages.send(user_id=event.obj.message['from_id'],
                                  message=message,

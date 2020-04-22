@@ -1,5 +1,7 @@
 import map_of_toponym
+import map_of_organization
 from db_session import DataBase
+from speaker import Speaker
 
 
 class Analysis:
@@ -8,8 +10,10 @@ class Analysis:
         self.db.insert_request()
         self.text = text.lower()
         self.greeting = 'привет здравствуй здорово прив hi hello хай'.split()
-        self.commands = ['Карта <название> <тип: гибрид, схема, спутник> \n(пример правильной команды: \"Карта Москва гибрид\")',
-                         'Мои запросы', 'Все запросы', 'очистить историю']
+        self.commands = ['Карта <название> <тип: гибрид, схема, спутник> \n(пример правильной команды: Карта Москва гибрид)',
+                         'Искать <организация> <тип: гибрид, схема, спутник> \n(пример правильной команды: искать аптеки в мичуринске гибрид)',
+                         'Пробки <населенный пункт> <тип: гибрид, схема, спутник> \n(пример правильной команды: Пробки Москва гибрид)',
+                         'Мои запросы', 'Все запросы', 'Очистить историю']
         self.result = self.analys()
 
     def get_result(self):
@@ -29,6 +33,12 @@ class Analysis:
             result = self.is_third_command()
         elif self.is_fourth_command():
             result = self.is_fourth_command()
+        elif self.is_fifth_command():
+            result = self.is_fifth_command()
+        elif self.is_sixth_command():
+            result = self.is_sixth_command()
+        else:
+            result = Speaker(self.text).get_result()
         if result == '':
             result = "чтобы посмотреть возможные команды, напиши слово \"Команды\""
         return result
@@ -88,4 +98,42 @@ class Analysis:
                 return 'что-то пошло не так'
             else:
                 return 'история очищена'
+        return False
+
+    def is_fifth_command(self):
+        if self.text.startswith('искать'):
+            text = self.text.split()[1:]
+            toponym = ''
+            type_map = 'scheme'
+            for i in text:
+                if 'гибрид' in i:
+                    type_map = 'hybrid'
+                elif 'схема' in i:
+                    type_map = 'scheme'
+                elif 'спутник' in i:
+                    type_map = 'satellite'
+                else:
+                    toponym += i + ' '
+            if toponym == '':
+                return 'Вы не ввели название организации'
+            return map_of_organization.MapOfOrganization(toponym, type_map).get_result()
+        return False
+
+    def is_sixth_command(self):
+        if self.text.startswith('пробки'):
+            text = self.text.split()[1:]
+            toponym = ''
+            type_map = 'scheme'
+            for i in text:
+                if 'гибрид' in i:
+                    type_map = 'hybrid'
+                elif 'схема' in i:
+                    type_map = 'scheme'
+                elif 'спутник' in i:
+                    type_map = 'satellite'
+                else:
+                    toponym += i + ' '
+            if toponym == '':
+                return 'Вы не ввели название населенного пункта'
+            return map_of_toponym.MapOfToponym(toponym, type_map, True).get_result()
         return False

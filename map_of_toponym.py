@@ -4,9 +4,10 @@ from io import BytesIO
 
 
 class MapOfToponym:
-    def __init__(self, toponym, type_map="scheme", type_marker="comma"):
+    def __init__(self, toponym, type_map="scheme", trf=False, type_marker="comma"):
         self.type_marker = type_marker
         self.toponym = self.get_toponym(toponym)
+        self.trf = trf
         if not self.toponym:
             self.map = "Нет такого населенного пункта"
             return
@@ -69,11 +70,9 @@ class MapOfToponym:
             map_params["l"] = "sat"
         else:
             map_params["l"] = "sat,skl"
+        if self.trf:
+            map_params["l"] += ",trf"
         map_api_server = "http://static-maps.yandex.ru/1.x/"
-        #result = map_api_server + '?'
-        #for i in map_params:
-            #result = result + '&' + i + '=' + map_params[i]
-        #return result
         response = requests.get(map_api_server, params=map_params)
         return BytesIO(response.content)
 
