@@ -1,11 +1,13 @@
 import map_of_toponym
+from admins import ADMINS, GOD
 import map_of_organization
 from db_session import DataBase
-from speaker import Speaker
+import speaker
 
 
 class Analysis:
     def __init__(self, text, user_id):
+        self.user_id = str(user_id)
         self.db = DataBase(text, user_id)
         self.db.insert_request()
         self.text = text.lower()
@@ -13,7 +15,13 @@ class Analysis:
         self.commands = ['Карта <название> <тип: гибрид, схема, спутник> \n(пример правильной команды: Карта Москва гибрид)',
                          'Искать <организация> <тип: гибрид, схема, спутник> \n(пример правильной команды: искать аптеки в мичуринске гибрид)',
                          'Пробки <населенный пункт> <тип: гибрид, схема, спутник> \n(пример правильной команды: Пробки Москва гибрид)',
-                         'Мои запросы', 'Все запросы', 'Очистить историю']
+                         'Мои запросы', 'Очистить историю']
+        if self.user_id in ADMINS:
+            self.commands.append('Все запросы')
+        if self.user_id in GOD:
+            self.commands.append("Добавить админа")
+            self.commands.append("Удалить админа")
+            self.commands.append("Админы")
         self.result = self.analys()
 
     def get_result(self):
@@ -21,24 +29,41 @@ class Analysis:
 
     def analys(self):
         result = ''
-        if self.is_hello():
-            result = self.is_hello()
-        elif self.is_commands():
-            result = self.is_commands()
-        elif self.is_first_command():
-            result = self.is_first_command()
-        elif self.is_second_command():
-            result = self.is_second_command()
-        elif self.is_third_command():
-            result = self.is_third_command()
-        elif self.is_fourth_command():
-            result = self.is_fourth_command()
-        elif self.is_fifth_command():
-            result = self.is_fifth_command()
-        elif self.is_sixth_command():
-            result = self.is_sixth_command()
+        priv = self.is_hello()
+        com = self.is_commands()
+        com1 = self.is_first_command()
+        com2 = self.is_second_command()
+        com3 = self.is_third_command()
+        com4 = self.is_fourth_command()
+        com5 = self.is_fifth_command()
+        com6 = self.is_sixth_command()
+        add_admin = self.add_admin()
+        remove_admin = self.remove_admin()
+        adm = self.all_admins()
+        if priv:
+            result = priv
+        elif com:
+            result = com
+        elif com1:
+            result = com1
+        elif com2:
+            result = com2
+        elif com3:
+            result = com3
+        elif com4:
+            result = com4
+        elif com5:
+            result = com5
+        elif com6:
+            result = com6
+        elif add_admin:
+            result = add_admin
+        elif remove_admin:
+            result = remove_admin
+        elif adm:
+            result = adm
         else:
-            result = Speaker(self.text).get_result()
+            result = speaker.Speaker(self.text).get_result()
         if result == '':
             result = "чтобы посмотреть возможные команды, напиши слово \"Команды\""
         return result
@@ -85,6 +110,8 @@ class Analysis:
 
     def is_third_command(self):
         if "все запросы" in self.text:
+            if self.user_id not in ADMINS:
+                return "Недостаточный уровень допуска"
             res = '\n'.join([x[0] for x in self.db.get_requests(False)])
             if res == '':
                 return 'что-то пошло не так'
@@ -136,4 +163,46 @@ class Analysis:
             if toponym == '':
                 return 'Вы не ввели название населенного пункта'
             return map_of_toponym.MapOfToponym(toponym, type_map, True).get_result()
+        return False
+
+    def add_admin(self):
+        if self.text.startswith("добавить админа"):
+            if self.user_id in GOD:
+                a = self.text.split()
+                if len(a) < 3:
+                    return "Вы не ввели id админа"
+                user_id = a
+                ADMINS.add(user_id)
+                f = open('admins.txt', 'w')
+                f.write('\n'.join([x for x in ADMINS]))
+                f.close()
+                return f"Админ добавлен: {user_id}"
+            else:
+                return "Недостаточный уровень допуска"
+        return False
+
+    def remove_admin(self):
+        if self.text.startswith("удалить админа"):
+            if self.user_id in GOD:
+                a = self.text.split()
+                if len(a) < 3:
+                    return "Вы не ввели id админа"
+                user_id = a
+                if user_id not in ADMINS:
+                    return "Пользователь не является админом"
+                ADMINS.remove(user_id)
+                f = open('admins.txt', 'w')
+                f.write('\n'.join([x for x in ADMINS]))
+                f.close()
+                return f"Админ удален: {user_id}"
+            else:
+                return "Недостаточный уровень допуска"
+        return False
+
+    def all_admins(self):
+        if self.text == "админы":
+            if self.user_id in GOD:
+                return '\n'.join(ADMINS)
+            else:
+                return "Недостаточный уровень допуска"
         return False
